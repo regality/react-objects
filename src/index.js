@@ -14,9 +14,16 @@ export function wrapComponent (Component, initialState = {}) {
 export function createMixin(name, mixins) {
   if (typeof name !== 'string') throw new Error('createMixin name must be a string')
   if (typeof mixins !== 'object') throw new Error('createMixin mixins must be an object')
-  return function applyMixin(proxy) {
+  return function applyMixin(proxy, extraMethods = {}) {
     const { state, path, onStateChange, changeHandlers } = proxy.__private__
-    return createProxy({ state, path, onStateChange, changeHandlers, mixins, reasons: [ name ] })
+    return createProxy({
+      state,
+      path,
+      onStateChange,
+      changeHandlers,
+      mixins: { ...mixins, ...extraMethods },
+      reasons: [ name ]
+    })
   }
 }
 
@@ -160,7 +167,6 @@ function createProxy(opts) {
         }
       } else {
         const fullPath = [ ...path, ...toPath(prop) ]
-        console.log('fullpath', fullPath)
         let childChangeHandlers = [ ...changeHandlers ]
         if (mixins && mixins.onChange) {
           childChangeHandlers.unshift(mixins.onChange.bind(createProxy({
